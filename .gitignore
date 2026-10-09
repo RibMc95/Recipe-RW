@@ -1,0 +1,33 @@
+# --- Python bytecode / caches ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Virtual environment (yours is named .venv) ---
+.venv/
+venv/
+
+# --- Local database: generated at runtime, holds YOUR saved recipes ---
+recipes.db
+
+# --- Logs ---
+*.log
+
+# --- Node (harmless to keep in case you ever add tooling) ---
+node_modules/
+dist/
+
+# --- Source cookbook PDFs (large; keep out of the repo) ---
+Books/
+Book/
+*.pdf
+
+# --- Personal scratch notes ---
+notes.md
+
+# --- Your rules file and roadmap ---
+# NOTE: these are currently ignored. Most projects DO commit these two
+# (they document the project). Delete the two lines below if you'd like
+# them tracked in git instead.
+Claude.md
+ROADMAP.md
