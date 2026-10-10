@@ -76,3 +76,9 @@ PDF page  ──►  render to image   (pdf.py,  PyMuPDF)
 | OCR | pytesseract + Tesseract |
 | Images | Pillow |
 | Storage & search | SQLite (built into Python) |
+
+## A note on AI assistance
+
+I built this project myself as a learning exercise. I used Claude (Anthropic's
+AI assistant) in a supporting role only — for planning and refining the project
+roadmap, learning Python concepts as I went, and help with debugging.
