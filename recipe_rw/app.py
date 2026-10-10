@@ -17,6 +17,25 @@ def pixmap_to_qpixmap(pix):
     return QPixmap.fromImage(image)
 
 
+# --- checklist helpers (ingredients & steps are checkable lists) ---
+def add_checklist_item(list_widget, text):
+    """Add one checkable (unchecked) row to a QListWidget."""
+    item = QListWidgetItem(text)
+    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)  # let it show a checkbox
+    item.setCheckState(Qt.Unchecked)                      # start unticked
+    list_widget.addItem(item)
+
+def set_checklist(list_widget, items):
+    """Replace a list's contents with checkable rows from a list of strings."""
+    list_widget.clear()
+    for text in items:
+        add_checklist_item(list_widget, text)
+
+def checklist_texts(list_widget):
+    """Read every row's text back out as a list of strings (ignores checked state)."""
+    return [list_widget.item(i).text() for i in range(list_widget.count())]
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()                       # run QMainWindow's own setup first — REQUIRED
@@ -24,13 +43,15 @@ class MainWindow(QMainWindow):
         self.resize(900, 650)
 
         # --- RECIPE EDIT FIELDS ---
-        self.title_edit       = QLineEdit()
-        self.source_edit      = QLineEdit()
-        self.servings_edit    = QLineEdit()
-        self.tags_edit        = QLineEdit()
-        self.ingredients_edit = QTextEdit()
-        self.steps_edit       = QTextEdit()
-        self.current_id = None     
+        self.title_edit    = QLineEdit()
+        self.source_edit   = QLineEdit()
+        self.servings_edit = QLineEdit()
+        self.tags_edit     = QLineEdit()
+
+        # Ingredients & Steps are CHECKLISTS: checkable rows + an input (Enter
+        # to add) + a Remove-selected button. _make_checklist builds each group.
+        self.ingredients_list, ingredients_box = self._make_checklist("Add ingredient, press Enter")
+        self.steps_list,       steps_box       = self._make_checklist("Add step, press Enter")
 
         # --- RECIPE FORM LAYOUT ---
         form = QFormLayout()
@@ -38,8 +59,8 @@ class MainWindow(QMainWindow):
         form.addRow("Source:",      self.source_edit)
         form.addRow("Servings:",    self.servings_edit)
         form.addRow("Tags:",        self.tags_edit)
-        form.addRow("Ingredients:", self.ingredients_edit)
-        form.addRow("Steps:",       self.steps_edit)
+        form.addRow("Ingredients:", ingredients_box)
+        form.addRow("Steps:",       steps_box)
 
         # --- STATE: the things we must remember between clicks ---
         self.doc = None            # the open PDF (None = nothing open yet)
@@ -120,6 +141,38 @@ class MainWindow(QMainWindow):
         container.setLayout(root)
         self.setCentralWidget(container)
 
+    # ---- checklist builders/handlers ----
+
+    def _make_checklist(self, placeholder):
+        """Build a checkable list + add-input + remove-button. Return (list_widget, container)."""
+        list_widget = QListWidget()
+
+        input_edit = QLineEdit()
+        input_edit.setPlaceholderText(placeholder)
+        # pressing Enter in the input adds a new checkable row
+        input_edit.returnPressed.connect(lambda: self._add_from_input(list_widget, input_edit))
+
+        remove_button = QPushButton("Remove selected")
+        remove_button.clicked.connect(lambda: self._remove_selected(list_widget))
+
+        container = QWidget()                     # wrap the three widgets as one form field
+        box = QVBoxLayout(container)
+        box.setContentsMargins(0, 0, 0, 0)
+        box.addWidget(list_widget)
+        box.addWidget(input_edit)
+        box.addWidget(remove_button)
+        return list_widget, container
+
+    def _add_from_input(self, list_widget, input_edit):
+        text = input_edit.text().strip()
+        if text:                                  # ignore empty input
+            add_checklist_item(list_widget, text)
+            input_edit.clear()
+
+    def _remove_selected(self, list_widget):
+        for item in list_widget.selectedItems():  # delete whatever rows are highlighted
+            list_widget.takeItem(list_widget.row(item))
+
     # ---- these methods are the "slots" the buttons call ----
 
     def open_pdf(self):
@@ -163,16 +216,16 @@ class MainWindow(QMainWindow):
         pix = pdf.render_page(self.doc, self.page_number, zoom=self.zoom)
         text = image_to_text(pix)
         ingredients, steps = parse_recipe_text(text)
-        self.ingredients_edit.setPlainText("\n".join(ingredients))
-        self.steps_edit.setPlainText("\n".join(steps))
+        set_checklist(self.ingredients_list, ingredients)
+        set_checklist(self.steps_list, steps)
 
     def build_recipe(self):
         title = self.title_edit.text()
         source = self.source_edit.text()
         servings = int(self.servings_edit.text() or 0)
         tags = [tag.strip() for tag in self.tags_edit.text().split(",") if tag.strip()]
-        ingredients = [line.strip() for line in self.ingredients_edit.toPlainText().split("\n") if line.strip()]
-        steps = [line.strip() for line in self.steps_edit.toPlainText().split("\n") if line.strip()]
+        ingredients = checklist_texts(self.ingredients_list)
+        steps = checklist_texts(self.steps_list)
 
         return Recipe(
             title=title,
@@ -203,8 +256,8 @@ class MainWindow(QMainWindow):
         self.source_edit.setText(recipe.source)
         self.servings_edit.setText(str(recipe.servings))      # int → text
         self.tags_edit.setText(", ".join(recipe.tags))        # list → comma string
-        self.ingredients_edit.setPlainText("\n".join(recipe.ingredients))  # list → lines
-        self.steps_edit.setPlainText("\n".join(recipe.steps))
+        set_checklist(self.ingredients_list, recipe.ingredients)   # list → checkable rows
+        set_checklist(self.steps_list, recipe.steps)
         
     def on_save(self):
         recipe = self.build_recipe()
