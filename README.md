@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🍳 Recipe Reader / Writer
+#  Recipe Reader / Writer
 
 **Turn scanned cookbook pages into a searchable, editable recipe library.**
 
@@ -18,12 +18,12 @@
 
 ## Features 
 
-- 📖 Open scanned cookbook **PDFs** and page through them
-- 🔍 **Zoom** and scroll any page
-- 🔡 **OCR** a page (Tesseract) and auto-split the text into ingredients & steps
-- ✅ **Checklist-style** ingredient and step editing — tick items off while you cook
-- 💾 **Save** recipes to a local SQLite database (full create / read / update / delete)
-- 🔎 **Search** your saved recipes by title and reload them
+- Open scanned cookbook **PDFs** and page through them
+-  **Zoom** and scroll any page
+-  **OCR** a page (Tesseract) and auto-split the text into ingredients & steps
+-  **Checklist-style** ingredient and step editing — tick items off while you cook
+-  **Save** recipes to a local SQLite database (full create / read / update / delete)
+-  **Search** your saved recipes by title and reload them
 
 ## Requirements
 
